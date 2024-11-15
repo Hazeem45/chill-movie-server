@@ -35,8 +35,7 @@ class AuthControllers {
 				data: userData,
 			});
 		} catch (error) {
-			console.log(error);
-			return res.status(500).send(error);
+			return res.status(500).json({ error });
 		}
 	};
 
@@ -52,30 +51,30 @@ class AuthControllers {
 				});
 			}
 
-			const accessToken = jwt.sign(
-				{
-					userId: existUser.id,
-				},
-				process.env.JWT_SECRET_KEY,
-				{
-					expiresIn: '10m',
-				},
-			);
+			const accessToken = jwt.sign({ userId: existUser.id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '10m' });
 
-			const refreshToken = jwt.sign({ userId: user.id }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '6 months' });
+			const refreshToken = jwt.sign({ userId: existUser.id }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '180d' });
 
-			await authModels.saveRefreshToken(user.id, refreshToken);
+			const MAX_REFRESH_TOKENS = 3;
+			const tokens = await authModels.getRefreshTokensByUserId(existUser.id);
+
+			if (tokens.length >= MAX_REFRESH_TOKENS) {
+				const oldestToken = tokens[0];
+				await authModels.deleteRefreshTokenByTokenId(oldestToken.id);
+			}
+
+			await authModels.saveRefreshToken(existUser.id, refreshToken);
 
 			res.cookie('refreshToken', refreshToken, {
 				httpOnly: true,
 				secure: true,
 				sameSite: 'Strict',
-				maxAge: 7 * 24 * 60 * 60 * 1000,
+				maxAge: 6 * 30 * 24 * 60 * 60 * 1000,
 			});
 
-			res.json({ accessToken });
+			return res.status(200).json({ accessToken });
 		} catch (error) {
-			return res.status(500).send({ message: error.message });
+			return res.status(500).json({ error });
 		}
 	};
 
@@ -83,34 +82,44 @@ class AuthControllers {
 		const { refreshToken } = req.cookies;
 
 		if (!refreshToken) {
-			return res.status(401).json({ message: 'Refresh token missing' });
+			return res.status(401).json({ message: 'Refresh token is missing' });
 		}
 
 		try {
 			const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
 
+			const storedToken = await authModels.findRefreshToken(refreshToken);
+			if (!storedToken) {
+				return res.status(401).json({ message: 'Invalid refresh token' });
+			}
+
 			const newAccessToken = jwt.sign({ userId: decoded.userId }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '10m' });
 
-			res.status(200).json({ accessToken: newAccessToken });
-		} catch (err) {
-			res.status(403).json({ message: 'Invalid or expired refresh token' });
+			return res.status(200).json({ accessToken: newAccessToken });
+		} catch (error) {
+			return res.status(401).json({ error });
 		}
 	};
 
 	logoutUser = async (req, res) => {
 		const { refreshToken } = req.cookies;
+
 		if (!refreshToken) {
 			return res.status(204).send();
 		}
 
-		await authModels.deleteRefreshToken(refreshToken);
+		try {
+			await authModels.deleteRefreshToken(refreshToken);
 
-		res.clearCookie('refreshToken', {
-			httpOnly: true,
-			secure: true,
-			sameSite: 'Strict',
-		});
-		res.status(200).json({ message: 'Logged out successfully' });
+			res.clearCookie('refreshToken', {
+				httpOnly: true,
+				secure: true,
+				sameSite: 'Strict',
+			});
+			return res.status(200).json({ message: 'Logged out successfully' });
+		} catch (error) {
+			return res.status(500).json({ error });
+		}
 	};
 }
 
