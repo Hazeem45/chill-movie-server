@@ -1,14 +1,14 @@
 const database = require('../../database/connection');
 
 class AuthModels {
-	// updateAuthToken = async (user_id, token) => {
-	// 	const [result] = await database.query('UPDATE auth SET token = ? WHERE user_id = ?', [token, user_id]);
-	// 	console.log(result);
-	// };
-
-	findToken = async (token) => {
+	findRefreshToken = async (token) => {
 		const [result] = await database.query('SELECT * FROM auth WHERE token = ?', [token]);
 		return result.length ? result[0] : null;
+	};
+
+	getRefreshTokensByUserId = async (userId) => {
+		const [result] = await database.query('SELECT * FROM auth WHERE user_id = ?', [userId]);
+		return result.length ? result : null;
 	};
 
 	saveRefreshToken = async (userId, token) => {
@@ -21,6 +21,10 @@ class AuthModels {
 
 	deleteRefreshToken = async (token) => {
 		await database.query('DELETE FROM auth WHERE token = ?', [token]);
+	};
+
+	deleteRefreshTokenByTokenId = async (tokenId) => {
+		await database.query('DELETE FROM auth WHERE id = ?', [tokenId]);
 	};
 }
 
