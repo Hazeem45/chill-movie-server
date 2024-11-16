@@ -20,8 +20,8 @@ class UsersModels {
 		return result.length ? result : null;
 	};
 
-	getExistingUsername = async (username) => {
-		const [result] = await database.query('SELECT id, username, password FROM users WHERE username = ? LIMIT 1', [username]);
+	getExistingUserByUsername = async (username) => {
+		const [result] = await database.query('SELECT id, username, password, role_id FROM users WHERE username = ? LIMIT 1', [username]);
 		return result.length ? result[0] : null;
 	};
 }
