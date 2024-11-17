@@ -6,8 +6,8 @@ class UsersModels {
 		return result.length ? result[0].email : null;
 	};
 
-	createUser = async (username, email, hashedPassword) => {
-		const [result] = await database.query('INSERT INTO users (username, email, password) VALUES (?, ?, ?)', [username, email, hashedPassword]);
+	createUser = async (username, hashedPassword, role = 2) => {
+		const [result] = await database.query('INSERT INTO users (username, password, role_id) VALUES (?, ?, ?)', [username, hashedPassword, role]);
 		if (result.affectedRows) {
 			return result.insertId;
 		} else {
@@ -17,12 +17,35 @@ class UsersModels {
 
 	getUserById = async (id) => {
 		const [result] = await database.query('SELECT * FROM users WHERE id = ? ', [id]);
+		result.forEach((user) => delete user.password);
+		return result.length ? result[0] : null;
+	};
+
+	getStoredPasswordByUserId = async (id) => {
+		const [result] = await database.query('SELECT password, username FROM users WHERE id = ? ', [id]);
+		return result.length ? result[0] : null;
+	};
+
+	updateUserDataByUserId = async (username, hashedPassword, userId) => {
+		const [result] = await database.query('UPDATE users SET username = ?, password = ? WHERE id = ?;', [username, hashedPassword, userId]);
+		return result.length ? result[0] : null;
+	};
+
+	getExistingUserByUsername = async (username) => {
+		const [result] = await database.query('SELECT id, username, password, role_id FROM users WHERE username = ? LIMIT 1', [username]);
+		return result.length ? result[0] : null;
+	};
+
+	getAllUsers = async () => {
+		const [result] = await database.query('SELECT * FROM users WHERE role_id = 2 ');
+		result.forEach((user) => delete user.password);
 		return result.length ? result : null;
 	};
 
-	getExistingUsername = async (username) => {
-		const [result] = await database.query('SELECT id, username, password FROM users WHERE username = ? LIMIT 1', [username]);
-		return result.length ? result[0] : null;
+	getAllAdmin = async () => {
+		const [result] = await database.query('SELECT * FROM users WHERE role_id = 1 ');
+		result.forEach((user) => delete user.password);
+		return result.length ? result : null;
 	};
 }
 

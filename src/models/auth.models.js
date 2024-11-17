@@ -26,6 +26,10 @@ class AuthModels {
 	deleteRefreshTokenByTokenId = async (tokenId) => {
 		await database.query('DELETE FROM auth WHERE id = ?', [tokenId]);
 	};
+
+	deleteExpiredTokensByUserId = async (userId) => {
+		await database.query('DELETE FROM auth WHERE expires_at < NOW() AND user_id = ?', [userId]);
+	};
 }
 
 module.exports = new AuthModels();
