@@ -5,7 +5,8 @@ const usersModels = require('../models/users.models');
 
 class AuthControllers {
 	registerUser = async (req, res) => {
-		const { username, email, password } = req.body;
+		const { username, password } = req.body;
+
 		try {
 			const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -17,21 +18,43 @@ class AuthControllers {
 				});
 			}
 
-			const registeredEmail = await usersModels.getRegisteredEmail(email);
-			if (registeredEmail) {
-				return res.status(409).json({
-					code: 409,
-					message: 'Email is already registered!',
-				});
-			}
-
-			const userID = await usersModels.createUser(username, email, hashedPassword);
-			const userData = await usersModels.getUserById(userID);
+			const responseId = await usersModels.createUser(username, hashedPassword);
+			const userData = await usersModels.getUserById(responseId);
 
 			return res.status(201).json({
 				code: 201,
 				message: 'User registered successfully',
 				data: userData,
+			});
+		} catch (error) {
+			return res.status(500).json({ error });
+		}
+	};
+
+	registerAdmin = async (req, res) => {
+		const { username, password, privilege_key } = req.body;
+
+		try {
+			if (!privilege_key || privilege_key !== process.env.ADMIN_PRIVILEGE_KEY) {
+				return res.status(403).json({ message: 'You do not have permission to access this resource' });
+			}
+			const hashedPassword = await bcrypt.hash(password, 10);
+
+			const existingUsername = await usersModels.getExistingUserByUsername(username);
+			if (existingUsername) {
+				return res.status(409).json({
+					code: 409,
+					message: 'Username is not available!',
+				});
+			}
+
+			const responseId = await usersModels.createUser(username, hashedPassword, 1);
+			const adminData = await usersModels.getUserById(responseId);
+
+			return res.status(201).json({
+				code: 201,
+				message: 'Successfully created new admin',
+				data: adminData,
 			});
 		} catch (error) {
 			return res.status(500).json({ error });
@@ -44,7 +67,9 @@ class AuthControllers {
 
 		try {
 			const existUser = await usersModels.getExistingUserByUsername(username);
-			if (!existUser || !(await bcrypt.compare(password, existUser.password))) {
+			const isPasswordValid = existUser && (await bcrypt.compare(password, existUser.password));
+
+			if (!existUser || !isPasswordValid) {
 				return res.status(401).json({
 					code: 401,
 					message: 'Invalid username or password',
@@ -88,7 +113,7 @@ class AuthControllers {
 				},
 				process.env.REFRESH_TOKEN_SECRET,
 				{
-					expiresIn: '10m',
+					expiresIn: '180d',
 				},
 			);
 
@@ -97,8 +122,8 @@ class AuthControllers {
 			res.cookie('refreshToken', refreshToken, {
 				httpOnly: true,
 				secure: true,
-				sameSite: 'Strict',
-				maxAge: 6 * 30 * 24 * 60 * 60 * 1000,
+				sameSite: 'None',
+				expires: new Date(Date.now() + 6 * 30 * 24 * 60 * 60 * 1000),
 			});
 
 			return res.status(200).json({ accessToken });
@@ -115,7 +140,6 @@ class AuthControllers {
 		}
 
 		try {
-			const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
 			const storedToken = await authModels.findRefreshToken(refreshToken);
 			if (!storedToken) {
 				return res.status(403).json({ message: 'Invalid refresh token' });
@@ -126,10 +150,12 @@ class AuthControllers {
 				return res.status(403).json({ message: 'Refresh token expired' });
 			}
 
+			const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+
 			const newAccessToken = jwt.sign(
 				{
 					userId: decoded.userId,
-					role: decoded.role_id,
+					role: decoded.role,
 				},
 				process.env.ACCESS_TOKEN_SECRET,
 				{
@@ -151,7 +177,7 @@ class AuthControllers {
 		}
 
 		try {
-			await authModels.deleteRefreshToken(refreshToken);
+			// await authModels.deleteRefreshToken(refreshToken);
 
 			res.clearCookie('refreshToken', {
 				httpOnly: true,
