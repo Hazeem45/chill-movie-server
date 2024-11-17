@@ -17,6 +17,16 @@ class UserControllers {
 				});
 			}
 
+			const isUsernameUnchanged = username === response.username || !username;
+			const isPasswordUnchanged = !password || (await bcrypt.compare(password, response.password));
+
+			if (isUsernameUnchanged && isPasswordUnchanged) {
+				return res.status(200).json({
+					code: 200,
+					message: 'No changes detected in user data.',
+				});
+			}
+
 			let hashedPassword;
 			if (password) {
 				hashedPassword = await bcrypt.hash(password, 10);
