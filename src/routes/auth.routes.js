@@ -1,12 +1,14 @@
 const express = require('express');
-const authController = require('../controllers/auth.controller');
 const refreshTokenRateLimiter = require('../middlewares/rateLimiter');
+const validation = require('../middlewares/validation');
+const { registerUser, loginUser, logoutUser, refreshAccessToken, registerAdmin } = require('../controllers/auth.controller');
+const { registerValidator, loginValidator } = require('../validations/validators');
 const router = express.Router();
 
-router.post('/register', authController.registerUser);
-router.post('/login', authController.loginUser);
-router.post('/logout', authController.logoutUser);
-router.post('/refresh-token', refreshTokenRateLimiter, authController.refreshAccessToken);
-router.post('/register-admin', authController.registerAdmin);
+router.post('/register', registerValidator, validation, registerUser);
+router.post('/login', loginValidator, validation, loginUser);
+router.post('/refresh-token', refreshTokenRateLimiter, refreshAccessToken);
+router.post('/register-admin', registerValidator, validation, registerAdmin);
+router.post('/logout', logoutUser);
 
 module.exports = router;

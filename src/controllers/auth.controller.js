@@ -36,7 +36,11 @@ class AuthControllers {
 
 		try {
 			if (!privilege_key || privilege_key !== process.env.ADMIN_PRIVILEGE_KEY) {
-				return res.status(403).json({ message: 'You do not have permission to access this resource' });
+				return res.status(403).json({
+					code: 403,
+					error: !privilege_key ? 'Privilege key is required' : 'Invalid privilege key',
+					message: 'You do not have permission to access this resource',
+				});
 			}
 			const hashedPassword = await bcrypt.hash(password, 10);
 

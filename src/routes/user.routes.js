@@ -1,12 +1,14 @@
 const express = require('express');
-const userController = require('../controllers/user.controller');
-const adminPermission = require('../middlewares/adminPermission');
 const authorization = require('../middlewares/authorization');
+const adminPermission = require('../middlewares/adminPermission');
+const validation = require('../middlewares/validation');
+const { updateUserData, createNewAdmin, getAllUsers, getAllAdministrators } = require('../controllers/user.controller');
+const { updateUserDataValidator, registerValidator } = require('../validations/validators');
 const router = express.Router();
 
-router.post('/update-user-data', authorization, userController.updateUserData);
-router.post('/create-admin', authorization, adminPermission, userController.createNewAdmin);
-router.get('/all-users', authorization, adminPermission, userController.getAllUsers);
-router.get('/all-admins', authorization, adminPermission, userController.getAllAdministrators);
+router.post('/update-user-data', authorization, updateUserDataValidator, validation, updateUserData);
+router.post('/create-admin', authorization, adminPermission, registerValidator, validation, createNewAdmin);
+router.get('/all-users', authorization, adminPermission, getAllUsers);
+router.get('/all-admins', authorization, adminPermission, getAllAdministrators);
 
 module.exports = router;

@@ -17,8 +17,8 @@ class UserControllers {
 				});
 			}
 
-			const isUsernameUnchanged = username === response.username || !username;
-			const isPasswordUnchanged = !password || (await bcrypt.compare(password, response.password));
+			const isUsernameUnchanged = username === response.username;
+			const isPasswordUnchanged = await bcrypt.compare(password, response.password);
 
 			if (isUsernameUnchanged && isPasswordUnchanged) {
 				return res.status(200).json({
@@ -27,16 +27,9 @@ class UserControllers {
 				});
 			}
 
-			let hashedPassword;
-			if (password) {
-				hashedPassword = await bcrypt.hash(password, 10);
-			} else {
-				hashedPassword = response.password;
-			}
+			const hashedPassword = await bcrypt.hash(password, 10);
 
-			const newUsername = username || response.username;
-
-			await usersModels.updateUserDataByUserId(newUsername, hashedPassword, userId);
+			await usersModels.updateUserDataByUserId(username, hashedPassword, userId);
 
 			return res.status(200).json({
 				code: 200,
