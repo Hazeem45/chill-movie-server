@@ -27,7 +27,7 @@ class AuthControllers {
 				data: userData,
 			});
 		} catch (error) {
-			return res.status(500).json({ error });
+			return res.status(500).json({ message: 'An internal server error occurred', error });
 		}
 	};
 
@@ -36,7 +36,11 @@ class AuthControllers {
 
 		try {
 			if (!privilege_key || privilege_key !== process.env.ADMIN_PRIVILEGE_KEY) {
-				return res.status(403).json({ message: 'You do not have permission to access this resource' });
+				return res.status(403).json({
+					code: 403,
+					error: !privilege_key ? 'Privilege key is required' : 'Invalid privilege key',
+					message: 'You do not have permission to access this resource',
+				});
 			}
 			const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -57,7 +61,7 @@ class AuthControllers {
 				data: adminData,
 			});
 		} catch (error) {
-			return res.status(500).json({ error });
+			return res.status(500).json({ message: 'An internal server error occurred', error });
 		}
 	};
 
@@ -128,7 +132,7 @@ class AuthControllers {
 
 			return res.status(200).json({ accessToken });
 		} catch (error) {
-			return res.status(500).json({ error });
+			return res.status(500).json({ message: 'An internal server error occurred', error });
 		}
 	};
 
@@ -177,7 +181,7 @@ class AuthControllers {
 		}
 
 		try {
-			// await authModels.deleteRefreshToken(refreshToken);
+			await authModels.deleteRefreshToken(refreshToken);
 
 			res.clearCookie('refreshToken', {
 				httpOnly: true,
@@ -186,7 +190,7 @@ class AuthControllers {
 			});
 			return res.status(200).json({ message: 'Logged out successfully' });
 		} catch (error) {
-			return res.status(500).json({ error });
+			return res.status(500).json({ message: 'An internal server error occurred', error });
 		}
 	};
 }

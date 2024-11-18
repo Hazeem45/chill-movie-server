@@ -27,8 +27,7 @@ class UsersModels {
 	};
 
 	updateUserDataByUserId = async (username, hashedPassword, userId) => {
-		const [result] = await database.query('UPDATE users SET username = ?, password = ? WHERE id = ?;', [username, hashedPassword, userId]);
-		return result.length ? result[0] : null;
+		await database.query('UPDATE users SET username = ?, password = ? WHERE id = ?;', [username, hashedPassword, userId]);
 	};
 
 	getExistingUserByUsername = async (username) => {

@@ -17,28 +17,26 @@ class UserControllers {
 				});
 			}
 
-			let hashedPassword;
-			if (password) {
-				hashedPassword = await bcrypt.hash(password, 10);
-			} else {
-				hashedPassword = response.password;
+			const isUsernameUnchanged = username === response.username;
+			const isPasswordUnchanged = await bcrypt.compare(password, response.password);
+
+			if (isUsernameUnchanged && isPasswordUnchanged) {
+				return res.status(200).json({
+					code: 200,
+					message: 'No changes detected in user data.',
+				});
 			}
 
-			const newUsername = username || response.username;
+			const hashedPassword = await bcrypt.hash(password, 10);
 
-			await usersModels.updateUserDataByUserId(newUsername, hashedPassword, userId);
+			await usersModels.updateUserDataByUserId(username, hashedPassword, userId);
 
 			return res.status(200).json({
 				code: 200,
 				message: 'User data updated successfully!',
 			});
 		} catch (error) {
-			return res.status(500).json({
-				message: 'An error occurred on the server.',
-				error: {
-					error,
-				},
-			});
+			return res.status(500).json({ message: 'An internal server error occurred', error });
 		}
 	};
 
@@ -66,7 +64,7 @@ class UserControllers {
 				data: adminData,
 			});
 		} catch (error) {
-			return res.status(500).json({ error });
+			return res.status(500).json({ message: 'An internal server error occurred', error });
 		}
 	};
 
@@ -74,17 +72,14 @@ class UserControllers {
 		const { userId, role } = req.token;
 
 		try {
-			if (role === 2) {
-				return res.status(403).json({ message: 'You have not permission to access' });
-			}
-
 			const response = await usersModels.getAllUsers();
+
 			return res.status(200).json({
 				accessors: { userId, role },
 				users_list: response,
 			});
 		} catch (error) {
-			return res.status(500).json({ error });
+			return res.status(500).json({ message: 'An internal server error occurred', error });
 		}
 	};
 
@@ -92,17 +87,14 @@ class UserControllers {
 		const { userId, role } = req.token;
 
 		try {
-			if (role === 2) {
-				return res.status(403).json({ message: 'You have not permission to access' });
-			}
-
 			const response = await usersModels.getAllAdmin();
+
 			return res.status(200).json({
 				accessors: { userId, role },
 				admin_list: response,
 			});
 		} catch (error) {
-			return res.status(500).json({ error });
+			return res.status(500).json({ message: 'An internal server error occurred', error });
 		}
 	};
 }
