@@ -27,7 +27,7 @@ class AuthControllers {
 				data: userData,
 			});
 		} catch (error) {
-			return res.status(500).json({ error });
+			return res.status(500).json({ message: 'An internal server error occurred', error });
 		}
 	};
 
@@ -57,7 +57,7 @@ class AuthControllers {
 				data: adminData,
 			});
 		} catch (error) {
-			return res.status(500).json({ error });
+			return res.status(500).json({ message: 'An internal server error occurred', error });
 		}
 	};
 
@@ -128,7 +128,7 @@ class AuthControllers {
 
 			return res.status(200).json({ accessToken });
 		} catch (error) {
-			return res.status(500).json({ error });
+			return res.status(500).json({ message: 'An internal server error occurred', error });
 		}
 	};
 
@@ -177,7 +177,7 @@ class AuthControllers {
 		}
 
 		try {
-			// await authModels.deleteRefreshToken(refreshToken);
+			await authModels.deleteRefreshToken(refreshToken);
 
 			res.clearCookie('refreshToken', {
 				httpOnly: true,
@@ -186,7 +186,7 @@ class AuthControllers {
 			});
 			return res.status(200).json({ message: 'Logged out successfully' });
 		} catch (error) {
-			return res.status(500).json({ error });
+			return res.status(500).json({ message: 'An internal server error occurred', error });
 		}
 	};
 }

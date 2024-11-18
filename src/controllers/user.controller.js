@@ -43,12 +43,7 @@ class UserControllers {
 				message: 'User data updated successfully!',
 			});
 		} catch (error) {
-			return res.status(500).json({
-				message: 'An error occurred on the server.',
-				error: {
-					error,
-				},
-			});
+			return res.status(500).json({ message: 'An internal server error occurred', error });
 		}
 	};
 
@@ -76,7 +71,7 @@ class UserControllers {
 				data: adminData,
 			});
 		} catch (error) {
-			return res.status(500).json({ error });
+			return res.status(500).json({ message: 'An internal server error occurred', error });
 		}
 	};
 
@@ -84,17 +79,14 @@ class UserControllers {
 		const { userId, role } = req.token;
 
 		try {
-			if (role === 2) {
-				return res.status(403).json({ message: 'You have not permission to access' });
-			}
-
 			const response = await usersModels.getAllUsers();
+
 			return res.status(200).json({
 				accessors: { userId, role },
 				users_list: response,
 			});
 		} catch (error) {
-			return res.status(500).json({ error });
+			return res.status(500).json({ message: 'An internal server error occurred', error });
 		}
 	};
 
@@ -102,17 +94,14 @@ class UserControllers {
 		const { userId, role } = req.token;
 
 		try {
-			if (role === 2) {
-				return res.status(403).json({ message: 'You have not permission to access' });
-			}
-
 			const response = await usersModels.getAllAdmin();
+
 			return res.status(200).json({
 				accessors: { userId, role },
 				admin_list: response,
 			});
 		} catch (error) {
-			return res.status(500).json({ error });
+			return res.status(500).json({ message: 'An internal server error occurred', error });
 		}
 	};
 }
