@@ -46,6 +46,15 @@ class UsersModels {
 		result.forEach((user) => delete user.password);
 		return result.length ? result : null;
 	};
+
+	updateProfilePicture = async (picture, userId) => {
+		await database.query('UPDATE users SET picture = ? WHERE id = ?', [picture, userId]);
+	};
+
+	getPictureFilename = async (userId) => {
+		const [result] = await database.query('SELECT picture FROM users WHERE id = ?', [userId]);
+		return result.length ? result[0].picture : null;
+	};
 }
 
 module.exports = new UsersModels();

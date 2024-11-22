@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const authModels = require('../models/auth.models');
+const usersModels = require('../models/users.models');
 
 module.exports = async (req, res, next) => {
 	const { authorization } = req.headers;
@@ -29,7 +30,13 @@ module.exports = async (req, res, next) => {
 			return res.status(403).json({ message: 'Invalid refresh token' });
 		}
 
-		req.token = decodedAccessToken;
+		const { username } = await usersModels.getUserById(decodedAccessToken.userId);
+
+		req.token = {
+			...decodedAccessToken,
+			username,
+		};
+
 		next();
 	} catch (error) {
 		return res.status(401).json({

@@ -1,11 +1,12 @@
 const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
 const usersModels = require('../models/users.models');
+const path = require('path');
 
 class UserControllers {
 	updateUserData = async (req, res) => {
 		const { username, password, current_password } = req.body;
 		const { userId } = req.token;
+		console.log(req.token);
 
 		try {
 			const response = await usersModels.getStoredPasswordByUserId(userId);
@@ -92,6 +93,60 @@ class UserControllers {
 			return res.status(200).json({
 				accessors: { userId, role },
 				admin_list: response,
+			});
+		} catch (error) {
+			return res.status(500).json({ message: 'An internal server error occurred', error });
+		}
+	};
+
+	setProfilePicture = async (req, res) => {
+		const file = req.file;
+		const { userId } = req.token;
+
+		if (!file) return res.status(400).send('No file uploaded');
+
+		const filename = file.filename;
+
+		try {
+			await usersModels.updateProfilePicture(filename, userId);
+			const picturePath = process.env.SERVER_DOMAIN || `localhost:${process.env.PORT || 3000}` + `/assets/${filename}`;
+			return res.status(200).send({
+				message: 'Picture uploaded successfully',
+				pictureURL: picturePath,
+			});
+		} catch (error) {
+			return res.status(500).json({ message: 'An internal server error occurred', error });
+		}
+	};
+
+	showPicture = async (req, res) => {
+		const { userId } = req.token;
+
+		try {
+			const picture = await usersModels.getPictureFilename(userId);
+			if (!picture) {
+				return res.status(404).json({ message: 'Picture not found' });
+			}
+
+			const picturePath = path.join(__dirname, '../../uploads', picture);
+			return res.sendFile(picturePath);
+		} catch (error) {
+			return res.status(500).json({ message: 'An internal server error occurred', error });
+		}
+	};
+
+	getPictureURL = async (req, res) => {
+		const { userId } = req.token;
+
+		try {
+			const picture = await usersModels.getPictureFilename(userId);
+			if (!picture) {
+				return res.status(404).json({ message: 'Picture not found' });
+			}
+
+			const picturePath = process.env.SERVER_DOMAIN || `localhost:${process.env.PORT || 3000}` + `/assets/${picture}`;
+			return res.status(200).json({
+				pictureURL: picturePath,
 			});
 		} catch (error) {
 			return res.status(500).json({ message: 'An internal server error occurred', error });
