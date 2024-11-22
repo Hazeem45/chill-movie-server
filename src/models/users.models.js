@@ -2,8 +2,8 @@ const database = require('../../database/connection');
 
 class UsersModels {
 	getRegisteredEmail = async (email) => {
-		const [result] = await database.query('SELECT email FROM users WHERE email = ? ', [email]);
-		return result.length ? result[0].email : null;
+		const [result] = await database.query('SELECT email, username FROM users WHERE email = ? ', [email]);
+		return result.length ? result[0] : null;
 	};
 
 	createUser = async (username, hashedPassword, role = 2) => {
@@ -31,7 +31,7 @@ class UsersModels {
 	};
 
 	getExistingUserByUsername = async (username) => {
-		const [result] = await database.query('SELECT id, username, password, role_id FROM users WHERE username = ? LIMIT 1', [username]);
+		const [result] = await database.query('SELECT id, username, password, role_id, is_verified FROM users WHERE username = ? LIMIT 1', [username]);
 		return result.length ? result[0] : null;
 	};
 
