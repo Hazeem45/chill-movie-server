@@ -17,6 +17,10 @@
    echo "ADMIN_PRIVILEGE_KEY=custom-your-key" >> .env
    echo "ACCESS_TOKEN_SECRET=custom-your-key" >> .env
    echo "REFRESH_TOKEN_SECRET=custom-your-key" >> .env
+   echo "PORT=" >> .env
+   echo "SERVICE_EMAILER=email" >> .env
+   echo "EMAIL=youremail@email.com" >> .env
+   echo EMAIL_PASSWORD=password" >> .env
    ```
 
    _(Alternatively, you can create the `.env` file manually with the following command and edit it afterwards)_
@@ -35,6 +39,10 @@
    ADMIN_PRIVILEGE_KEY=custom-your-key 	# access admin without login as admin
    ACCESS_TOKEN_SECRET=custom-your-key 	# access token secret key
    REFRESH_TOKEN_SECRET=custom-your-key 	# refresh token secret key
+   PORT=
+   SERVICE_EMAILER=email
+   EMAIL=youremail@email.com
+   EMAIL_PASSWORD=password
    ```
 
 3. **Install dependencies:**
