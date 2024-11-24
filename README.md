@@ -20,7 +20,7 @@
    echo "PORT=" >> .env
    echo "SERVICE_EMAILER=email" >> .env
    echo "EMAIL=youremail@email.com" >> .env
-   echo EMAIL_PASSWORD=password" >> .env
+   echo "EMAIL_PASSWORD=password" >> .env
    ```
 
    _(Alternatively, you can create the `.env` file manually with the following command and edit it afterwards)_
